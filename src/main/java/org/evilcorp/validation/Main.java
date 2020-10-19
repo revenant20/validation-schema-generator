@@ -1,9 +1,9 @@
-package org.example.validation;
+package org.evilcorp.validation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.validation.parser.JsonParser;
-import org.example.validation.parser.MessageType;
+import org.evilcorp.validation.parser.JsonParser;
+import org.evilcorp.validation.parser.MessageType;
 
 import java.io.File;
 import java.io.IOException;

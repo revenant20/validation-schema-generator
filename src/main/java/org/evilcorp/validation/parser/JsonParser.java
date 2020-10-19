@@ -1,4 +1,4 @@
-package org.example.validation.parser;
+package org.evilcorp.validation.parser;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
