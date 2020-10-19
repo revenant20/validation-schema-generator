@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "title",
+    "description": "description",
+    "type": [
+        "object",
+        "null"
+    ],
+    "additionalProperties": false,
+    "properties": {
+        "test": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "maxLength": 249
+        }
+    }
+}
