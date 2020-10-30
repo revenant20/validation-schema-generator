@@ -1,0 +1,59 @@
+{
+  "messages": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": ["string", "null"],
+          "minLength": 0,
+          "maxLength": 60
+        },
+        "text": {
+          "type": ["string", "null"],
+          "minLength": 0,
+          "maxLength": 250
+        },
+        "type": {
+          "type": ["string", "null"],
+          "minLength": 0,
+          "maxLength": 20
+        }
+      },
+      "additionalProperties": false
+    },
+    "maxItems": 100,
+    "additionalItems": false
+  },
+  "error": {
+    "type": "object",
+    "properties": {
+      "uuid": {
+        "type": ["string", "null"],
+        "minLength": 0,
+        "maxLength": 36
+      },
+      "code": {
+        "type":["string", "null"],
+        "minLength": 0,
+        "maxLength": 50
+      },
+      "system": {
+        "type": ["string", "null"],
+        "minLength": 0,
+        "maxLength": 20
+      },
+      "title": {
+        "type": ["string", "null"],
+        "minLength": 0,
+        "maxLength": 60
+      },
+      "text": {
+        "type": ["string", "null"],
+        "minLength": 0,
+        "maxLength": 250
+      }
+    },
+    "additionalProperties": false
+  }
+}

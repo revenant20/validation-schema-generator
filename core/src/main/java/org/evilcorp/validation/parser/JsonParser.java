@@ -11,19 +11,19 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class JsonParser {
+public class JsonParser implements SchemaValidationCreator {
 
-    public static final String OBJECT = "object";
-    public static final String TYPE = "type";
-    public static final String STRING = "string";
-    public static final String MAX_LENGTH = "maxLength";
-    public static final String PROPERTIES = "properties";
-    public static final String ADDITIONAL_PROPERTIES = "additionalProperties";
-    public static final String ARRAY = "array";
+    private static final String OBJECT = "object";
+    private static final String TYPE = "type";
+    private static final String STRING = "string";
+    private static final String MAX_LENGTH = "maxLength";
+    private static final String PROPERTIES = "properties";
+    private static final String ADDITIONAL_PROPERTIES = "additionalProperties";
+    private static final String ARRAY = "array";
 
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    public void pars(JsonNode mess, MessageType type) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
+    public JsonNode pars(JsonNode mess, MessageType type) throws IOException {
         ObjectNode schema = mapper.createObjectNode();
         schema.put("$schema", "http://json-schema.org/draft-04/schema#");
         schema.put("title", "title");
@@ -59,8 +59,12 @@ public class JsonParser {
                 parsObject(mess, bodyOne);
                 break;
         }
-        writeToFile("validation-schema.json", mapper.writeValueAsString(schema));
+        return schema;
+    }
 
+    public void parsToFile(JsonNode mess, MessageType type) throws IOException {
+        JsonNode schema = pars(mess, type);
+        writeToFile("validation-schema.json", mapper.writeValueAsString(schema));
     }
 
     private void parsObject(JsonNode body, ObjectNode message) {

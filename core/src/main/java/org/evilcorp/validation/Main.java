@@ -14,6 +14,6 @@ public class Main {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(new File("schemas/body.json"));
         JsonParser parser = new JsonParser();
-        parser.pars(jsonNode, MessageType.RQ);
+        parser.parsToFile(jsonNode, MessageType.RQ);
     }
 }
