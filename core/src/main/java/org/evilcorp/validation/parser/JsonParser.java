@@ -5,12 +5,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.RequiredArgsConstructor;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
+@RequiredArgsConstructor
 public class JsonParser implements SchemaValidationCreator {
 
     private static final String OBJECT = "object";
@@ -21,18 +23,17 @@ public class JsonParser implements SchemaValidationCreator {
     private static final String ADDITIONAL_PROPERTIES = "additionalProperties";
     private static final String ARRAY = "array";
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
 
-    public JsonNode pars(JsonNode mess, MessageType type) throws IOException {
+    public JsonNode pars(JsonNode mess, ValidationParameters parameters) throws IOException {
         ObjectNode schema = mapper.createObjectNode();
         schema.put("$schema", "http://json-schema.org/draft-04/schema#");
         schema.put("title", "title");
         schema.put("description", "description");
-
-        switch (type) {
+        switch (parameters.getMessageType()) {
             case RQ:
                 setType(schema, OBJECT, "null");
-                parsObject(mess, schema);
+                parsObject(mess, schema, parameters);
                 break;
             case RS_ARR:
                 schema.put(TYPE, OBJECT);
@@ -45,8 +46,8 @@ public class JsonParser implements SchemaValidationCreator {
                 bodyArr.put("maxItems", 1000);
                 ObjectNode items = bodyArr.putObject("items");
                 setType(items, OBJECT, "null");
-                putErrorAndMessegesForResponse(properties);
-                parsObject(mess, items);
+                putErrorAndMessagesForResponse(properties);
+                parsObject(mess, items, parameters);
                 break;
             case RS:
                 schema.put(TYPE, OBJECT);
@@ -55,19 +56,19 @@ public class JsonParser implements SchemaValidationCreator {
                 propOne.putObject("success").put(TYPE, "boolean");
                 ObjectNode bodyOne = propOne.putObject("body");
                 setType(bodyOne, OBJECT, "null");
-                putErrorAndMessegesForResponse(propOne);
-                parsObject(mess, bodyOne);
+                putErrorAndMessagesForResponse(propOne);
+                parsObject(mess, bodyOne, parameters);
                 break;
         }
         return schema;
     }
 
-    public void parsToFile(JsonNode mess, MessageType type) throws IOException {
-        JsonNode schema = pars(mess, type);
+    public void parsToFile(JsonNode mess, ValidationParameters parameters) throws IOException {
+        JsonNode schema = pars(mess, parameters);
         writeToFile("validation-schema.json", mapper.writeValueAsString(schema));
     }
 
-    private void parsObject(JsonNode body, ObjectNode message) {
+    private void parsObject(JsonNode body, ObjectNode message, ValidationParameters parameters) {
         setType(message, OBJECT, "null");
         message.put(ADDITIONAL_PROPERTIES, false);
         ObjectNode properties = message.putObject(PROPERTIES);
@@ -77,22 +78,25 @@ public class JsonParser implements SchemaValidationCreator {
                             ObjectNode ell = properties.putObject(el);
                             if (field.isInt()) {
                                 setType(ell, "integer", "null");
-                                ell.put("minimum", 0).put("maximum", Integer.MAX_VALUE);
+                                ell
+                                        .put("minimum", 0)
+                                        .put("maximum", parameters.getMaxInteger() == null ?
+                                                Integer.MAX_VALUE : parameters.getMaxInteger());
                             } else if (field.isBoolean()) {
                                 setType(ell, "boolean", "null");
                             } else if (field.isValueNode()) {
                                 setType(ell, STRING, "null");
-                                ell.put(MAX_LENGTH, 249);
+                                ell.put(MAX_LENGTH, parameters.getMaxLength() == null ? 249 : parameters.getMaxLength());
                             } else if (field.isObject()) {
-                                parsObject(field, ell);
+                                parsObject(field, ell, parameters);
                             } else if (field.isArray()) {
-                                parsArray(field, ell);
+                                parsArray(field, ell, parameters);
                             }
                         }
                 );
     }
 
-    private void putErrorAndMessegesForResponse(ObjectNode properties) throws IOException {
+    private void putErrorAndMessagesForResponse(ObjectNode properties) throws IOException {
         ClassLoader classLoader = this.getClass().getClassLoader();
         File file = new File(classLoader.getResource("responseTemplate.json").getFile());
         JsonNode jsonNode = new ObjectMapper().readTree(file);
@@ -100,14 +104,14 @@ public class JsonParser implements SchemaValidationCreator {
         properties.set("error", jsonNode.get("error"));
     }
 
-    private void parsArray(JsonNode field, ObjectNode ell) {
+    private void parsArray(JsonNode field, ObjectNode ell, ValidationParameters parameters) {
         setType(ell, ARRAY, "null");
         ell.put("maxItems", 200);
         ell.put("additionalItems", false);
         ObjectNode items = ell.putObject("items");
         ArrayNode arr = (ArrayNode) field;
         Iterator<JsonNode> elements = arr.elements();
-        parsObject(elements.next(), items);
+        parsObject(elements.next(), items, parameters);
     }
 
     private void writeToFile(String fileName, String json) throws IOException {

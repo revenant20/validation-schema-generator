@@ -17,6 +17,6 @@ public class JsonParserServiceImpl implements JsonParserService {
 
     @Override
     public JsonNode pars(CreateSchemaReq rq) throws IOException {
-        return parser.pars(rq.getMess(), rq.getMessageType());
+        return parser.pars(rq.getMess(), rq.getConfiguration());
     }
 }
