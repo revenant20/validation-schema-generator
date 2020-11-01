@@ -6,5 +6,5 @@ import java.io.IOException;
 
 public interface SchemaValidationCreator {
 
-    JsonNode pars(JsonNode node, ValidationParameters parameters) throws IOException;
+    JsonNode parse(JsonNode node, ValidationParameters parameters) throws IOException;
 }

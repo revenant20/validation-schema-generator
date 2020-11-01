@@ -15,7 +15,7 @@ public class Main {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(new File("schemas/body.json"));
         JsonParser parser = new JsonParser(new ObjectMapper());
-        parser.parsToFile(jsonNode, new ValidationParameters() {
+        parser.parseToFile(jsonNode, new ValidationParameters() {
 
             @Override
             public Integer getMaxLength() {

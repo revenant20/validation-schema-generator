@@ -25,7 +25,7 @@ public class JsonParser implements SchemaValidationCreator {
 
     private final ObjectMapper mapper;
 
-    public JsonNode pars(JsonNode mess, ValidationParameters parameters) throws IOException {
+    public JsonNode parse(JsonNode mess, ValidationParameters parameters) throws IOException {
         ObjectNode schema = mapper.createObjectNode();
         schema.put("$schema", "http://json-schema.org/draft-04/schema#");
         schema.put("title", "title");
@@ -33,7 +33,7 @@ public class JsonParser implements SchemaValidationCreator {
         switch (parameters.getMessageType()) {
             case RQ:
                 setType(schema, OBJECT, "null");
-                parsObject(mess, schema, parameters);
+                parseObject(mess, schema, parameters);
                 break;
             case RS_ARR:
                 schema.put(TYPE, OBJECT);
@@ -47,7 +47,7 @@ public class JsonParser implements SchemaValidationCreator {
                 ObjectNode items = bodyArr.putObject("items");
                 setType(items, OBJECT, "null");
                 putErrorAndMessagesForResponse(properties);
-                parsObject(mess, items, parameters);
+                parseObject(mess, items, parameters);
                 break;
             case RS:
                 schema.put(TYPE, OBJECT);
@@ -57,18 +57,18 @@ public class JsonParser implements SchemaValidationCreator {
                 ObjectNode bodyOne = propOne.putObject("body");
                 setType(bodyOne, OBJECT, "null");
                 putErrorAndMessagesForResponse(propOne);
-                parsObject(mess, bodyOne, parameters);
+                parseObject(mess, bodyOne, parameters);
                 break;
         }
         return schema;
     }
 
-    public void parsToFile(JsonNode mess, ValidationParameters parameters) throws IOException {
-        JsonNode schema = pars(mess, parameters);
+    public void parseToFile(JsonNode mess, ValidationParameters parameters) throws IOException {
+        JsonNode schema = parse(mess, parameters);
         writeToFile("validation-schema.json", mapper.writeValueAsString(schema));
     }
 
-    private void parsObject(JsonNode body, ObjectNode message, ValidationParameters parameters) {
+    private void parseObject(JsonNode body, ObjectNode message, ValidationParameters parameters) {
         setType(message, OBJECT, "null");
         message.put(ADDITIONAL_PROPERTIES, false);
         ObjectNode properties = message.putObject(PROPERTIES);
@@ -88,7 +88,7 @@ public class JsonParser implements SchemaValidationCreator {
                                 setType(ell, STRING, "null");
                                 ell.put(MAX_LENGTH, parameters.getMaxLength() == null ? 249 : parameters.getMaxLength());
                             } else if (field.isObject()) {
-                                parsObject(field, ell, parameters);
+                                parseObject(field, ell, parameters);
                             } else if (field.isArray()) {
                                 parsArray(field, ell, parameters);
                             }
@@ -111,7 +111,7 @@ public class JsonParser implements SchemaValidationCreator {
         ObjectNode items = ell.putObject("items");
         ArrayNode arr = (ArrayNode) field;
         Iterator<JsonNode> elements = arr.elements();
-        parsObject(elements.next(), items, parameters);
+        parseObject(elements.next(), items, parameters);
     }
 
     private void writeToFile(String fileName, String json) throws IOException {
