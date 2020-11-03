@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.evilcorp.validation.parser.JsonParser;
 import org.evilcorp.validation.parser.MessageType;
+import org.evilcorp.validation.parser.ResponseWrapperWriterImpl;
 import org.evilcorp.validation.parser.ValidationParameters;
 
 import java.io.File;
@@ -14,7 +15,7 @@ public class Main {
     public static void main(String[] args) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(new File("schemas/body.json"));
-        JsonParser parser = new JsonParser(new ObjectMapper());
+        JsonParser parser = new JsonParser(new ObjectMapper(), new ResponseWrapperWriterImpl());
         parser.parseToFile(jsonNode, new ValidationParameters() {
 
             @Override

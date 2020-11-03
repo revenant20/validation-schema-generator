@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Iterator;
 
 @RequiredArgsConstructor
 public class JsonParser implements SchemaValidationCreator {
@@ -24,9 +23,10 @@ public class JsonParser implements SchemaValidationCreator {
     private static final String ARRAY = "array";
 
     private final ObjectMapper mapper;
+    private final ResponseWrapperWriter responseWrapperWriter;
 
     public JsonNode parse(JsonNode mess, ValidationParameters parameters) throws IOException {
-        ObjectNode schema = mapper.createObjectNode();
+        var schema = mapper.createObjectNode();
         schema.put("$schema", "http://json-schema.org/draft-04/schema#");
         schema.put("title", "title");
         schema.put("description", "description");
@@ -38,25 +38,25 @@ public class JsonParser implements SchemaValidationCreator {
             case RS_ARR:
                 schema.put(TYPE, OBJECT);
                 schema.put(ADDITIONAL_PROPERTIES, false);
-                ObjectNode properties = schema.putObject(PROPERTIES);
+                var properties = schema.putObject(PROPERTIES);
                 properties.putObject("success").put(TYPE, "boolean");
-                ObjectNode bodyArr = properties.putObject("body");
+                var bodyArr = properties.putObject("body");
                 setType(bodyArr, ARRAY, "null");
                 bodyArr.put(ADDITIONAL_PROPERTIES, false);
                 bodyArr.put("maxItems", 1000);
-                ObjectNode items = bodyArr.putObject("items");
+                var items = bodyArr.putObject("items");
                 setType(items, OBJECT, "null");
-                putErrorAndMessagesForResponse(properties);
+                responseWrapperWriter.write(properties);
                 parseObject(mess, items, parameters);
                 break;
             case RS:
                 schema.put(TYPE, OBJECT);
                 schema.put(ADDITIONAL_PROPERTIES, false);
-                ObjectNode propOne = schema.putObject(PROPERTIES);
+                var propOne = schema.putObject(PROPERTIES);
                 propOne.putObject("success").put(TYPE, "boolean");
-                ObjectNode bodyOne = propOne.putObject("body");
+                var bodyOne = propOne.putObject("body");
                 setType(bodyOne, OBJECT, "null");
-                putErrorAndMessagesForResponse(propOne);
+                responseWrapperWriter.write(propOne);
                 parseObject(mess, bodyOne, parameters);
                 break;
         }
@@ -64,18 +64,18 @@ public class JsonParser implements SchemaValidationCreator {
     }
 
     public void parseToFile(JsonNode mess, ValidationParameters parameters) throws IOException {
-        JsonNode schema = parse(mess, parameters);
+        var schema = parse(mess, parameters);
         writeToFile("validation-schema.json", mapper.writeValueAsString(schema));
     }
 
     private void parseObject(JsonNode body, ObjectNode message, ValidationParameters parameters) {
         setType(message, OBJECT, "null");
         message.put(ADDITIONAL_PROPERTIES, false);
-        ObjectNode properties = message.putObject(PROPERTIES);
+        var properties = message.putObject(PROPERTIES);
         body.fieldNames()
                 .forEachRemaining(el -> {
-                            JsonNode field = body.get(el);
-                            ObjectNode ell = properties.putObject(el);
+                    var field = body.get(el);
+                    var ell = properties.putObject(el);
                             if (field.isInt()) {
                                 setType(ell, "integer", "null");
                                 ell
@@ -96,36 +96,27 @@ public class JsonParser implements SchemaValidationCreator {
                 );
     }
 
-    private void putErrorAndMessagesForResponse(ObjectNode properties) throws IOException {
-        ClassLoader classLoader = this.getClass().getClassLoader();
-        File file = new File(classLoader.getResource("responseTemplate.json").getFile());
-        JsonNode jsonNode = new ObjectMapper().readTree(file);
-        properties.set("messages", jsonNode.get("messages"));
-        properties.set("error", jsonNode.get("error"));
-    }
-
     private void parsArray(JsonNode field, ObjectNode ell, ValidationParameters parameters) {
         setType(ell, ARRAY, "null");
         ell.put("maxItems", 200);
         ell.put("additionalItems", false);
-        ObjectNode items = ell.putObject("items");
-        ArrayNode arr = (ArrayNode) field;
-        Iterator<JsonNode> elements = arr.elements();
+        var items = ell.putObject("items");
+        var arr = (ArrayNode) field;
+        var elements = arr.elements();
         parseObject(elements.next(), items, parameters);
     }
 
     private void writeToFile(String fileName, String json) throws IOException {
-        System.out.println(json);
-        File schemas = new File("schemas");
+        var schemas = new File("schemas");
         schemas.mkdir();
-        try (FileWriter writer = new FileWriter(new File(schemas, fileName))) {
+        try (var writer = new FileWriter(new File(schemas, fileName))) {
             writer.write(json);
         }
     }
 
     private void setType(ObjectNode node, String... types) {
-        ArrayNode jsonNodes = node.putArray(TYPE);
-        for (String type : types) {
+        var jsonNodes = node.putArray(TYPE);
+        for (var type : types) {
             jsonNodes.add(type);
         }
     }
